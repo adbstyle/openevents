@@ -1,7 +1,7 @@
-# Requirements: Event-Sharing PWA für soziale Kreise
+# Requirements: Open Events
 
 ## Vision Statement
-Eine PWA-Plattform, die es Nutzern ermöglicht, Events innerhalb ihrer sozialen Kreise zu teilen und durch überlappende Kreise sowie Following-Mechanismen neue soziale Kontakte zu knüpfen.
+**Open Events** ist eine PWA-Plattform, die es Nutzern ermöglicht, Events innerhalb ihrer sozialen Kreise zu teilen und durch überlappende Kreise sowie Following-Mechanismen neue soziale Kontakte zu knüpfen.
 
 **Kernmehrwert:** Die Hemmschwelle senken, an Events teilzunehmen, indem sichtbar wird, welche bekannten Personen bereits teilnehmen.
 
@@ -11,12 +11,16 @@ Eine PWA-Plattform, die es Nutzern ermöglicht, Events innerhalb ihrer sozialen 
 
 | Thema | Entscheidung |
 |-------|-------------|
-| Kreis-Erstellung | Jeder User kann frei Kreise erstellen |
-| Beitritt | Via Einladungslink |
+| Kreis-Erstellung | Jeder User kann frei Kreise erstellen (max 5) |
+| Kreis-Beitritt | Via Einladungslink (max 20 Mitgliedschaften) |
+| Kreis-Verwaltung | Admins können: bearbeiten, Mitglieder entfernen, weitere Admins ernennen |
+| Kreis-Löschung | Möglich; Events bleiben beim User (verlieren nur Kreis-Zuordnung) |
+| Einladungslinks | Mehrfach nutzbar, Admin kann invalidieren/neu erstellen |
 | Teilnehmer-Sichtbarkeit | Alle Teilnehmer sichtbar (kreis-übergreifend) |
+| Gemeinsame Kreise | Sichtbar auf User-Profil |
 | Following | Nur innerhalb eigener Kreise möglich |
 | Discovery | Push-Notifications + personalisierter Feed |
-| Event-Scope | Nur kreis-basiert (keine öffentlichen Events) |
+| Event-Scope | Nur kreis-basiert (keine öffentlichen Events, keine privaten Events innerhalb eines Kreises) |
 | Event-Typen | Einmalig und wiederkehrend |
 | Karte | Optional (nice-to-have) |
 | Zielgruppe | Freundeskreise + Communities |
@@ -239,34 +243,64 @@ Eine PWA-Plattform, die es Nutzern ermöglicht, Events innerhalb ihrer sozialen 
 **möchte ich** einen neuen Kreis erstellen
 **damit** ich Events mit einer Gruppe teilen kann.
 
+**Vorbedingungen:**
+1. Der USER ist eingeloggt
+2. Der USER hat das Limit von 5 erstellten Kreisen noch nicht erreicht
+
 **Akzeptanzkriterien:**
-1. User gibt Kreis-Namen ein (3-50 Zeichen)
-2. User kann optional ein Kreis-Bild hochladen
-3. User kann optionale Beschreibung hinzufügen
-4. Ersteller wird automatisch Admin des Kreises
-5. Ein Einladungslink wird generiert
+1. Der USER gibt einen Kreis-Namen ein (3-50 Zeichen)
+2. Der USER kann optional ein Kreis-Bild hochladen
+3. Der USER kann optional eine Beschreibung hinzufügen
+4. Das SYSTEM prüft ob der USER das Limit von 5 erstellten Kreisen erreicht hat
+5. Falls Limit erreicht: Fehlermeldung mit Hinweis auf Limit
+
+**Nachbedingungen:**
+1. Der USER ist automatisch Admin des neuen Kreises
+2. Ein Einladungslink wird generiert
+3. Der Kreis erscheint in "Meine Kreise"
 
 #### US-2.2: Einladungslink generieren
 **Als** Kreis-Admin
 **möchte ich** Einladungslinks generieren und teilen
 **damit** andere dem Kreis beitreten können.
 
+**Vorbedingungen:**
+1. Der USER ist Admin des Kreises
+
 **Akzeptanzkriterien:**
-1. Link kann jederzeit neu generiert werden (invalidiert alten Link)
-2. Link kann mit Ablaufdatum versehen werden (optional)
-3. Link kann geteilt werden (Share-API)
-4. Link zeigt Kreis-Preview vor Beitritt
+1. Der USER kann einen Einladungslink generieren
+2. Der Link kann mehrfach genutzt werden (beliebig viele Beitritte)
+3. Der USER kann den aktiven Link jederzeit invalidieren
+4. Der USER kann einen neuen Link generieren (ersetzt den alten)
+5. Der Link kann über die Share-API geteilt werden
+
+**Nachbedingungen:**
+1. Nur der aktuell gültige Link funktioniert für Beitritte
+
+**Out of Scope:**
+1. Ablaufdatum für Links (nicht im MVP)
 
 #### US-2.3: Kreis beitreten
 **Als** User
 **möchte ich** über einen Einladungslink einem Kreis beitreten
 **damit** ich Events dieses Kreises sehen kann.
 
+**Vorbedingungen:**
+1. Der USER hat einen gültigen Einladungslink
+2. Der USER ist eingeloggt (Link leitet zum Login falls nicht)
+
 **Akzeptanzkriterien:**
-1. Link öffnet App (Deep Link) oder Webansicht
-2. User sieht Kreis-Name, Bild, Beschreibung und Mitgliederzahl
-3. User kann "Beitreten" klicken
-4. Nach Beitritt erscheint Kreis in "Meine Kreise"
+1. Der Link öffnet die App (Deep Link) oder Webansicht
+2. Der USER sieht Kreis-Name, Bild, Beschreibung und Mitgliederzahl
+3. Der USER kann "Beitreten" klicken
+4. Das SYSTEM prüft ob der USER bereits Mitglied ist
+5. Falls bereits Mitglied: Freundliche Meldung "Du bist bereits Mitglied" und Weiterleitung zum Kreis
+6. Das SYSTEM prüft ob der USER das Limit von 20 Kreisen erreicht hat
+7. Falls Limit erreicht: Fehlermeldung mit Hinweis auf Limit
+
+**Nachbedingungen:**
+1. Der Kreis erscheint in "Meine Kreise"
+2. Der USER sieht alle Events dieses Kreises im Feed
 
 #### US-2.4: Kreise anzeigen
 **Als** User
@@ -294,11 +328,135 @@ Eine PWA-Plattform, die es Nutzern ermöglicht, Events innerhalb ihrer sozialen 
 **möchte ich** einen Kreis verlassen können
 **damit** ich keine Events mehr davon sehe.
 
+**Vorbedingungen:**
+1. Der USER ist Mitglied des Kreises
+
 **Akzeptanzkriterien:**
-1. "Kreis verlassen" Option in Kreis-Einstellungen
-2. Bestätigungsdialog vor Verlassen
-3. Letzter Admin kann Kreis nicht verlassen (muss Admin übertragen)
-4. Erstellte Events bleiben im Kreis bestehen
+1. Der USER findet "Kreis verlassen" in den Kreis-Einstellungen
+2. Das SYSTEM zeigt einen Bestätigungsdialog mit Konsequenzen
+3. Der USER kann den Vorgang abbrechen oder bestätigen
+4. Der einzige Admin kann den Kreis NICHT verlassen (muss zuerst Admin-Rolle übertragen)
+
+**Nachbedingungen:**
+1. Der Kreis erscheint nicht mehr in "Meine Kreise"
+2. Die Events des USERs werden aus diesem Kreis entfernt
+3. Die Events bleiben beim USER und können mit anderen Kreisen geteilt werden
+4. Der USER sieht keine Events mehr aus diesem Kreis im Feed
+
+---
+
+#### US-2.7: Kreis bearbeiten
+**Als** Kreis-Admin
+**möchte ich** den Kreis bearbeiten können
+**damit** ich Informationen aktuell halten kann.
+
+**Vorbedingungen:**
+1. Der USER ist Admin des Kreises
+
+**Akzeptanzkriterien:**
+1. Der USER kann den Kreis-Namen ändern (3-50 Zeichen)
+2. Der USER kann das Kreis-Bild ändern oder entfernen
+3. Der USER kann die Beschreibung ändern oder entfernen
+4. Änderungen werden sofort übernommen
+
+**Nachbedingungen:**
+1. Alle Mitglieder sehen die aktualisierten Informationen
+
+**Out of Scope:**
+1. Benachrichtigung der Mitglieder bei Änderungen
+
+---
+
+#### US-2.8: Mitglied entfernen
+**Als** Kreis-Admin
+**möchte ich** Mitglieder aus dem Kreis entfernen können
+**damit** ich den Kreis verwalten kann.
+
+**Vorbedingungen:**
+1. Der USER ist Admin des Kreises
+2. Das zu entfernende Mitglied ist nicht der einzige Admin
+
+**Akzeptanzkriterien:**
+1. Der USER sieht "Entfernen" Option bei jedem Mitglied (ausser bei sich selbst)
+2. Das SYSTEM zeigt einen Bestätigungsdialog
+3. Der USER kann den Vorgang abbrechen oder bestätigen
+4. Ein Admin kann einen anderen Admin nur entfernen wenn dieser NICHT der einzige Admin ist
+
+**Nachbedingungen:**
+1. Das entfernte Mitglied sieht den Kreis nicht mehr
+2. Die Events des entfernten Mitglieds werden aus dem Kreis entfernt
+3. Die Events bleiben beim entfernten Mitglied (können mit anderen Kreisen geteilt werden)
+
+**Out of Scope:**
+1. Benachrichtigung des entfernten Mitglieds
+
+---
+
+#### US-2.9: Admin-Verwaltung
+**Als** Kreis-Admin
+**möchte ich** weitere Admins ernennen und meine Admin-Rolle übertragen können
+**damit** der Kreis gemeinsam verwaltet werden kann.
+
+**Vorbedingungen:**
+1. Der USER ist Admin des Kreises
+
+**Akzeptanzkriterien:**
+1. Der USER kann ein Mitglied zum Admin ernennen
+2. Der USER kann seine eigene Admin-Rolle an ein anderes Mitglied übertragen
+3. Der USER kann einem Admin die Admin-Rolle entziehen (falls mehrere Admins existieren)
+4. Das SYSTEM verhindert dass der letzte Admin seine Rolle verliert
+
+**Nachbedingungen:**
+1. Der neue Admin hat volle Verwaltungsrechte
+
+---
+
+#### US-2.10: Kreis löschen
+**Als** Kreis-Admin
+**möchte ich** einen Kreis löschen können
+**damit** ich nicht mehr benötigte Kreise entfernen kann.
+
+**Vorbedingungen:**
+1. Der USER ist Admin des Kreises
+
+**Akzeptanzkriterien:**
+1. Der USER findet "Kreis löschen" in den Kreis-Einstellungen
+2. Das SYSTEM zeigt einen Warnhinweis mit Konsequenzen
+3. Der USER muss die Löschung explizit bestätigen (z.B. Kreis-Namen eintippen)
+
+**Nachbedingungen:**
+1. Der Kreis ist für alle Mitglieder nicht mehr sichtbar
+2. Alle Mitglieder verlieren die Kreis-Mitgliedschaft
+3. Events die mit diesem Kreis geteilt waren, verlieren diese Zuordnung
+4. Events bleiben bei ihren Erstellern (können mit anderen Kreisen geteilt werden)
+5. Events die nur mit diesem Kreis geteilt waren, sind temporär nicht sichtbar bis neu geteilt
+
+---
+
+#### US-2.11: Gemeinsame Kreise anzeigen
+**Als** User
+**möchte ich** sehen welche Kreise ich mit einem anderen User gemeinsam habe
+**damit** ich den sozialen Kontext verstehe.
+
+**Vorbedingungen:**
+1. Der USER betrachtet das Profil eines anderen Users
+
+**Akzeptanzkriterien:**
+1. Das SYSTEM zeigt "Gemeinsame Kreise: Kreis A, Kreis B, ..." auf dem User-Profil
+2. Nur Kreise werden angezeigt, in denen beide User Mitglied sind
+3. Falls keine gemeinsamen Kreise: Keine Anzeige
+
+---
+
+### Non-Functional Requirements für Epic 2
+
+| ID | Kategorie | Anforderung | Ziel | Priorität |
+|----|-----------|-------------|------|-----------|
+| NFR-2.1 | Limits | Max. erstellbare Kreise pro User | 5 Kreise | High |
+| NFR-2.2 | Limits | Max. Kreis-Mitgliedschaften pro User | 20 Kreise | High |
+| NFR-2.3 | Security | Einladungslinks nicht erratbar | UUID v4 oder ähnlich | High |
+| NFR-2.4 | Usability | Kreis-Liste lädt schnell | < 1s | Medium |
+| NFR-2.5 | Data Integrity | Bei Admin-Account-Löschung | Ältestes Mitglied wird Admin | High |
 
 ---
 
@@ -650,9 +808,9 @@ Eine PWA-Plattform, die es Nutzern ermöglicht, Events innerhalb ihrer sozialen 
 
 ## Offene Fragen (noch zu klären)
 
-1. **Kreis-Löschung:** Was passiert mit Events wenn ein Kreis gelöscht wird?
-2. **Max Kreise:** Gibt es ein Limit wie vielen Kreisen ein User beitreten kann?
-3. **Private Events:** Soll es Events geben die nur für bestimmte Mitglieder eines Kreises sichtbar sind?
+1. ~~**Kreis-Löschung:** Was passiert mit Events wenn ein Kreis gelöscht wird?~~ → Geklärt: Events bleiben beim User, verlieren nur Kreis-Zuordnung (siehe US-2.10)
+2. ~~**Max Kreise:** Gibt es ein Limit wie vielen Kreisen ein User beitreten kann?~~ → Geklärt: Max 5 erstellen, max 20 beitreten (siehe NFR-2.1, NFR-2.2)
+3. ~~**Private Events:** Soll es Events geben die nur für bestimmte Mitglieder eines Kreises sichtbar sind?~~ → Geklärt: Nein. "Open Events" = alle Events sind für alle Mitglieder der geteilten Kreise sichtbar
 
 ---
 
