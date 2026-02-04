@@ -932,6 +932,30 @@
 
 ---
 
+#### US-4.12: Feed nach Following filtern
+**Als** User
+**möchte ich** meinen Feed auf Events filtern können an denen Personen teilnehmen denen ich folge
+**damit** ich gezielt relevante Events sehe.
+
+**Vorbedingungen:**
+1. Der USER ist eingeloggt
+2. Der USER folgt mindestens einer Person
+
+**Akzeptanzkriterien:**
+1. Der USER kann im Feed einen Filter aktivieren: "Nur Events mit Personen denen ich folge"
+2. Bei aktivem Filter zeigt das SYSTEM nur Events wo mindestens eine gefolgte Person den Status "Zusage" hat
+3. "Vielleicht" und "Interessiert" zählen NICHT für diesen Filter
+4. Der Filter kann mit anderen Filtern (Kreis-Filter) kombiniert werden
+5. Filter-Status bleibt während der Session erhalten
+6. Bei App-Neustart wird Filter zurückgesetzt
+
+**Out of Scope:**
+1. Dauerhafte Filter-Speicherung
+
+**Abhängigkeit:** Benötigt Epic 5 (Following)
+
+---
+
 ### Non-Functional Requirements für Epic 4
 
 | ID | Kategorie | Anforderung | Ziel | Priorität |
@@ -955,39 +979,139 @@
 
 ## Epic 5: Following
 
-**Ziel:** User können anderen Usern innerhalb ihrer Kreise folgen.
+**Ziel:** User können anderen Usern innerhalb ihrer Kreise folgen, um deren Event-Teilnahmen priorisiert zu sehen und gezielt benachrichtigt zu werden.
+
+### Kontext & Entscheidungen für Epic 5
+
+| Thema | Entscheidung |
+|-------|-------------|
+| Follow-Modell | Asymmetrisch (keine Bestätigung), person-basiert |
+| Voraussetzung | Mindestens 1 gemeinsamer Kreis |
+| Bei Kreis-Verlust | Follow-Beziehung wird automatisch entfernt |
+| Following-Limit | Kein Limit |
+| Gegenseitiges Folgen | Keine spezielle Anzeige |
+| Blocking | Nicht im MVP |
+
+### Privacy-Modell
+
+| Was | Sichtbar für |
+|-----|-------------|
+| Meine Follower-Liste | Nur ich selbst |
+| Meine Following-Liste | Nur ich selbst |
+| "Folgt mir diese Person?" | Ja, Person sieht mich in ihrer Follower-Liste |
+| "Folgt mir" auf fremdem Profil | Nein, nicht sichtbar |
+| Follower-Notification | Keine |
 
 ### User Stories
 
 #### US-5.1: User folgen
 **Als** User
 **möchte ich** anderen Usern aus meinen Kreisen folgen
-**damit** ich ihre Event-Teilnahmen sehe.
+**damit** ich ihre Event-Teilnahmen priorisiert sehe und bei Zusagen benachrichtigt werde.
+
+**Vorbedingungen:**
+1. Der USER ist eingeloggt
+2. Der USER und die Zielperson haben mindestens einen gemeinsamen Kreis
 
 **Akzeptanzkriterien:**
-1. "Folgen" Button auf User-Profil (nur bei gemeinsamen Kreisen)
-2. Keine Bestätigung nötig (asymmetrisch)
-3. Following-Liste in meinem Profil einsehbar
+1. Der USER sieht "Folgen"-Button auf dem Profil einer Person mit gemeinsamem Kreis
+2. Der USER sieht KEINEN "Folgen"-Button wenn kein gemeinsamer Kreis existiert
+3. Nach Klick auf "Folgen" ändert sich der Button sofort zu "Folgst du"
+4. Das SYSTEM zeigt einen subtilen Toast: "Du folgst [Name]"
+5. Die Follow-Beziehung ist person-basiert, nicht kreis-basiert
+6. Es gibt kein Limit für die Anzahl der Personen denen man folgen kann
+
+**Nachbedingungen:**
+1. Die Zielperson erscheint in meiner Following-Liste
+2. Ich erscheine in der Follower-Liste der Zielperson
+3. Die Zielperson erhält KEINE Notification
+
+**Out of Scope:**
+1. Folgen-Vorschläge ("Personen die du kennen könntest")
+
+---
 
 #### US-5.2: User entfolgen
 **Als** User
 **möchte ich** jemanden entfolgen können
 **damit** ich meine Following-Liste pflegen kann.
 
-**Akzeptanzkriterien:**
-1. "Entfolgen" Button auf User-Profil oder in Following-Liste
-2. Kein Bestätigungsdialog nötig
-3. Sofortige Wirkung
+**Vorbedingungen:**
+1. Der USER folgt der Zielperson aktuell
 
-#### US-5.3: Follower & Following sehen
+**Akzeptanzkriterien:**
+1. Der USER kann auf dem Profil den Button "Folgst du" antippen → zeigt "Entfolgen"
+2. Der USER kann in seiner Following-Liste direkt "Entfolgen" wählen
+3. Kein Bestätigungsdialog nötig
+4. Sofortige Wirkung
+
+**Nachbedingungen:**
+1. Die Person verschwindet aus meiner Following-Liste
+2. Ich verschwinde aus der Follower-Liste der Person
+3. Die Person erhält KEINE Notification
+4. Ich kann der Person jederzeit erneut folgen (kein Cooldown)
+
+---
+
+#### US-5.3: Follower & Following verwalten
 **Als** User
-**möchte ich** meine Follower und Followings sehen
-**damit** ich weiss wer mir folgt.
+**möchte ich** meine Follower und Following-Listen einsehen
+**damit** ich weiss wer mir folgt und wem ich folge.
+
+**Vorbedingungen:**
+1. Der USER ist eingeloggt
 
 **Akzeptanzkriterien:**
-1. Tab "Follower" zeigt wer mir folgt
-2. Tab "Following" zeigt wem ich folge
-3. Jeweils mit Profilbild und Name
+1. Der USER findet "Follower" und "Following" Tabs in seinem eigenen Profil
+2. Die Listen zeigen Profilbild und Name
+3. Sortierung: Alphabetisch nach Name
+4. Tap auf eine Person öffnet deren Profil
+5. In der Following-Liste kann direkt "Entfolgen" gewählt werden
+6. Nur ich selbst kann meine Listen sehen
+
+**Out of Scope:**
+1. Suchfunktion in den Listen (nicht im MVP)
+2. Follower-/Following-Anzahl für andere User sichtbar
+
+---
+
+#### US-5.4: Automatisches Entfolgen bei Kreis-Verlust
+**Als** System
+**möchte ich** Follow-Beziehungen automatisch entfernen wenn kein gemeinsamer Kreis mehr existiert
+**damit** die Datenintegrität gewährleistet ist.
+
+**Trigger:**
+1. User verlässt den letzten gemeinsamen Kreis
+2. User wird aus dem letzten gemeinsamen Kreis entfernt
+3. Der letzte gemeinsame Kreis wird gelöscht
+
+**Akzeptanzkriterien:**
+1. Das SYSTEM prüft bei jedem Kreis-Austritt ob noch gemeinsame Kreise existieren
+2. Falls KEIN gemeinsamer Kreis mehr: Follow-Beziehung wird in beide Richtungen entfernt
+3. Keine Notification an betroffene User
+
+**Nachbedingungen:**
+1. Bei erneutem gemeinsamen Kreis: Erneutes Folgen erforderlich
+
+---
+
+### Non-Functional Requirements für Epic 5
+
+| ID | Kategorie | Anforderung | Ziel | Priorität |
+|----|-----------|-------------|------|-----------|
+| NFR-5.1 | Privacy | Follower/Following-Listen nur für Besitzer sichtbar | Keine öffentlichen Listen | High |
+| NFR-5.2 | Data Integrity | Auto-Entfolgen bei Kreis-Verlust | Sofortige Prüfung | High |
+| NFR-5.3 | Performance | Listen-Rendering | Flüssig bei 500+ Einträgen | Medium |
+| NFR-5.4 | Limits | Kein Following-Limit | Unbegrenzt | Low |
+
+---
+
+### Constraints & Randbedingungen für Epic 5
+
+1. **Kein Blocking im MVP:** User können nicht verhindern dass ihnen gefolgt wird
+2. **Keine Discovery:** Kein "Personen die du kennen könntest" Feature
+3. **Keine Suche in Listen:** Alphabetische Sortierung muss für Navigation reichen
+4. **Abhängigkeit:** Following benötigt Epic 1 (User) und Epic 2 (Kreise)
 
 ---
 
@@ -1016,8 +1140,9 @@
 1. Gruppierung nach Status (Zusagen, Vielleicht, Interessiert)
 2. Absagen werden nicht angezeigt
 3. Profilbild und Name pro Teilnehmer
-4. Kennzeichnung: "Folgst du" bei gefolgten Usern
-5. Total-Anzahl pro Kategorie
+4. Gefolgte User erhalten subtiles Icon/Badge am Avatar zur Kennzeichnung
+5. Gefolgte User werden innerhalb jeder Status-Gruppe zuerst angezeigt
+6. Total-Anzahl pro Kategorie
 
 #### US-6.3: Event kommentieren
 **Als** User
@@ -1179,6 +1304,15 @@
 | **Feed-Gruppierung** | Sticky Headers: Heute, Morgen, Diese Woche, Später |
 | **Meine Events Tab** | Zeigt Host-Events + Events mit Zusage |
 | **Abgesagte Events** | Aus Feed ausgeblendet |
+| **Following-Modell** | Asymmetrisch, person-basiert, kein Limit |
+| **Following-Voraussetzung** | Mindestens 1 gemeinsamer Kreis erforderlich |
+| **Following bei Kreis-Verlust** | Automatisch entfernt wenn kein gemeinsamer Kreis mehr |
+| **Follower/Following-Listen** | Nur für eigenen User sichtbar, alphabetisch sortiert |
+| **Follower-Notification** | Keine Benachrichtigung bei neuem Follower |
+| **Following in Event-Card** | Reihenfolge + Text ("X Personen denen du folgst + Y aus deinen Kreisen") |
+| **Following in Teilnehmerliste** | Subtiles Icon/Badge am Avatar, gefolgte zuerst |
+| **Feed-Filter für Following** | Ja, nur Events mit Zusagen von gefolgten Personen |
+| **Blocking** | Nicht im MVP |
 
 ## Offene Fragen (noch zu klären)
 
@@ -1223,7 +1357,8 @@
 - Epic 8: PWA (US-8.1)
 
 ### v1.1
-- Epic 5: Following (vollständig)
+- Epic 5: Following (vollständig: US-5.1 bis US-5.4)
+- Epic 4: US-4.12 (Feed-Filter für Following – benötigt Epic 5)
 - Epic 6: Kommentare (US-6.3, US-6.4)
 - Epic 7: Notifications (vollständig)
 
