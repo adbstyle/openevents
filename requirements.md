@@ -462,7 +462,7 @@
 
 ## Epic 3: Events
 
-**Ziel:** User können Events erstellen, bearbeiten und in Kreisen teilen.
+**Ziel:** User können Events erstellen, bearbeiten, in Kreisen teilen und gemeinsam mit Co-Hosts verwalten.
 
 ### User Stories
 
@@ -471,68 +471,268 @@
 **möchte ich** ein Event erstellen
 **damit** ich andere zu einer Aktivität einladen kann.
 
+**Vorbedingungen:**
+1. Der USER ist eingeloggt
+2. Der USER ist Mitglied in mindestens einem Kreis
+
 **Akzeptanzkriterien:**
-1. User gibt Titel ein (Pflicht, 3-100 Zeichen)
-2. User gibt Datum und Uhrzeit ein (Pflicht)
-3. User gibt Ort ein (Pflicht, Freitext oder Karten-Picker)
-4. User kann Beschreibung hinzufügen (optional, max 2000 Zeichen)
-5. User kann Bild hochladen (optional, max 10MB)
-6. User wählt mindestens einen Kreis für Sichtbarkeit
+1. Der USER gibt einen Titel ein (Pflicht, 3-100 Zeichen)
+2. Der USER gibt Start-Datum und Start-Uhrzeit ein (Pflicht, muss in der Zukunft liegen)
+3. Der USER gibt End-Datum und End-Uhrzeit ein (Pflicht, muss nach Start liegen)
+4. Der USER gibt einen Ort ein (Pflicht, Freitext)
+5. Der USER kann eine Beschreibung hinzufügen (optional, max 2000 Zeichen)
+6. Der USER kann ein Bild hochladen (optional, max 10MB, Bildformate)
+7. Der USER wählt mindestens einen Kreis für Sichtbarkeit (Multi-Select aus eigenen Kreisen)
+8. Das SYSTEM zeigt einen generischen Placeholder falls kein Bild hochgeladen wird
+
+**Nachbedingungen:**
+1. Der USER ist automatisch Host des Events
+2. Das Event erscheint in allen gewählten Kreisen
+3. Das Event erscheint im Feed aller Kreis-Mitglieder
+
+**Out of Scope:**
+1. Karten-Integration für Ort-Auswahl (Nice-to-have für später)
+2. Ganztägige Events ohne Uhrzeit
+
+---
 
 #### US-3.2: Event in mehreren Kreisen teilen
-**Als** Event-Ersteller
+**Als** Event-Host
 **möchte ich** ein Event in mehreren Kreisen teilen
 **damit** verschiedene Freundesgruppen es sehen.
 
-**Akzeptanzkriterien:**
-1. Multi-Select für Kreise bei Event-Erstellung
-2. Event erscheint in allen gewählten Kreisen
-3. Kreis-Auswahl kann nachträglich erweitert werden
-4. Kreise können nachträglich entfernt werden (Event verschwindet dort)
+**Vorbedingungen:**
+1. Der USER ist Host (Ersteller oder Co-Host) des Events
+2. Der USER ist Mitglied in den Ziel-Kreisen
 
-#### US-3.3: Wiederkehrendes Event erstellen
+**Akzeptanzkriterien:**
+1. Der USER kann bei Event-Erstellung mehrere Kreise auswählen (Multi-Select)
+2. Der USER kann nachträglich weitere Kreise hinzufügen
+3. Der USER kann nachträglich Kreise entfernen
+4. Das SYSTEM zeigt das Event in allen gewählten Kreisen
+5. Das SYSTEM entfernt das Event aus einem Kreis WENN der letzte Host diesen Kreis verlässt und kein anderer Host dort Mitglied ist
+
+**Nachbedingungen:**
+1. Kreis-Mitglieder sehen das Event im Feed
+
+**Out of Scope:**
+1. Limit für maximale Anzahl Kreise (kein Limit)
+
+---
+
+#### US-3.3: Wiederkehrendes Event erstellen (Vereinfacht)
 **Als** User
 **möchte ich** wiederkehrende Events erstellen
 **damit** ich regelmässige Treffen nicht einzeln anlegen muss.
 
+**Vorbedingungen:**
+1. Der USER erstellt ein neues Event (US-3.1)
+
 **Akzeptanzkriterien:**
-1. Wiederholungsoptionen: täglich, wöchentlich, monatlich, custom
-2. End-Datum oder Anzahl Wiederholungen wählbar
-3. Jede Instanz ist einzeln bearbeitbar
-4. Option "alle zukünftigen bearbeiten" bei Änderungen
+1. Der USER kann optional "Wiederholen" aktivieren
+2. Der USER wählt ein Intervall: Wöchentlich ODER Monatlich
+3. Der USER gibt ein End-Datum der Serie ein (Pflicht bei Wiederholung)
+4. Das SYSTEM generiert alle Instanzen bis zum End-Datum
+5. Alle Instanzen teilen dieselben Basis-Daten (Titel, Ort, Beschreibung, Kreise)
+6. Die Serie endet automatisch am End-Datum (keine Benachrichtigung)
+
+**Nachbedingungen:**
+1. Jede Instanz erscheint als separates Event im Feed
+2. Alle Instanzen sind mit der Serie verknüpft
+
+**Out of Scope:**
+1. Tägliche Wiederholung
+2. Custom-Intervalle (z.B. "alle 2 Wochen")
+3. Bearbeitung einzelner Instanzen (nur Absage möglich, siehe US-3.9)
+4. Erinnerung vor Serie-Ende
+
+---
 
 #### US-3.4: Event bearbeiten
-**Als** Event-Ersteller
+**Als** Event-Host
 **möchte ich** mein Event bearbeiten
 **damit** ich Änderungen kommunizieren kann.
 
+**Vorbedingungen:**
+1. Der USER ist Host (Ersteller oder Co-Host) des Events
+2. Das Event ist nicht abgesagt
+
 **Akzeptanzkriterien:**
-1. Alle Felder sind editierbar
-2. Teilnehmer werden bei wesentlichen Änderungen benachrichtigt (Datum, Ort)
-3. Änderungshistorie ist nicht sichtbar (Keep it simple)
+1. Der USER kann alle Felder bearbeiten (Titel, Datum, Zeit, Ort, Beschreibung, Bild)
+2. Das SYSTEM validiert: Start-Datum muss in der Zukunft liegen
+3. Das SYSTEM validiert: End-Datum muss nach Start-Datum liegen
+4. Das SYSTEM benachrichtigt alle Teilnehmer (Zusage, Vielleicht) bei Änderung von Datum, Zeit ODER Ort
+
+**Nachbedingungen:**
+1. Änderungen sind sofort für alle sichtbar
+
+**Out of Scope:**
+1. Änderungshistorie / Versionierung
+2. Bei wiederkehrenden Events: Nur die ganze Serie bearbeitbar (nicht einzelne Instanzen)
+
+---
 
 #### US-3.5: Event absagen
-**Als** Event-Ersteller
+**Als** Event-Host
 **möchte ich** ein Event absagen
 **damit** Teilnehmer informiert werden.
 
-**Akzeptanzkriterien:**
-1. "Event absagen" Option für Ersteller
-2. Event wird als "Abgesagt" markiert (nicht gelöscht)
-3. Alle Teilnehmer werden per Push benachrichtigt
-4. Event bleibt sichtbar mit "Abgesagt"-Banner
+**Vorbedingungen:**
+1. Der USER ist Host (Ersteller oder Co-Host) des Events
+2. Das Event ist nicht bereits abgesagt
 
-#### US-3.6: Event-Detail ansehen
+**Akzeptanzkriterien:**
+1. Der USER findet "Event absagen" in den Event-Optionen
+2. Das SYSTEM zeigt einen Bestätigungsdialog
+3. Das SYSTEM markiert das Event als "Abgesagt" (nicht gelöscht)
+4. Das SYSTEM benachrichtigt alle Teilnehmer per Push
+5. Das Event bleibt sichtbar mit deutlichem "Abgesagt"-Banner
+
+**Nachbedingungen:**
+1. Teilnehmer können keine neuen Zusagen mehr geben
+2. Das Event kann nicht mehr bearbeitet werden
+3. Das Event wird nach 180 Tagen automatisch gelöscht
+
+---
+
+#### US-3.6: Event löschen
+**Als** Event-Host
+**möchte ich** ein Event komplett löschen können
+**damit** ich Fehleingaben oder Testevents entfernen kann.
+
+**Vorbedingungen:**
+1. Der USER ist Host (Ersteller oder Co-Host) des Events
+
+**Akzeptanzkriterien:**
+1. Der USER findet "Event löschen" in den Event-Optionen
+2. Das SYSTEM zeigt einen Warnhinweis mit Konsequenzen
+3. Der USER muss die Löschung explizit bestätigen
+4. Das SYSTEM benachrichtigt alle Teilnehmer (Zusage, Vielleicht, Interessiert) per Push
+5. Das Event wird vollständig entfernt
+
+**Nachbedingungen:**
+1. Das Event ist für niemanden mehr sichtbar
+2. Alle Teilnahme-Daten werden gelöscht
+
+**Out of Scope:**
+1. "Stilles" Löschen ohne Benachrichtigung
+
+---
+
+#### US-3.7: Event-Detail ansehen
 **Als** User
 **möchte ich** Event-Details sehen
 **damit** ich entscheiden kann ob ich teilnehme.
 
+**Vorbedingungen:**
+1. Der USER ist Mitglied in mindestens einem Kreis, in dem das Event geteilt ist
+
 **Akzeptanzkriterien:**
-1. Anzeige: Titel, Bild, Datum/Zeit, Ort, Beschreibung
-2. Anzeige: Ersteller mit Profilbild
-3. Anzeige: Teilnehmerliste mit Status
-4. Anzeige: In welchen meiner Kreise das Event geteilt ist
-5. Hervorhebung: User denen ich folge (falls teilnehmend)
+1. Das SYSTEM zeigt: Titel, Bild (oder Placeholder), Start-/End-Datum und -Zeit, Ort, Beschreibung
+2. Das SYSTEM zeigt: Alle Hosts mit Profilbild (Ersteller + Co-Hosts)
+3. Das SYSTEM zeigt: Teilnehmerliste gruppiert nach Status (Zusagen, Vielleicht, Interessiert)
+4. Das SYSTEM zeigt: In welchen meiner Kreise das Event geteilt ist
+5. Das SYSTEM hebt User hervor denen ich folge (falls teilnehmend)
+6. Das SYSTEM zeigt bei abgesagten Events ein deutliches "Abgesagt"-Banner
+7. Das SYSTEM zeigt bei wiederkehrenden Events einen Hinweis "Teil einer Serie"
+
+**Out of Scope:**
+1. Navigation zu anderen Instanzen einer Serie
+
+---
+
+#### US-3.8: Co-Host hinzufügen
+**Als** Event-Host
+**möchte ich** andere User als Co-Host hinzufügen
+**damit** wir das Event gemeinsam verwalten können.
+
+**Vorbedingungen:**
+1. Der USER ist Host (Ersteller oder Co-Host) des Events
+2. Der hinzuzufügende User ist Mitglied in mindestens einem Kreis des USERs
+
+**Akzeptanzkriterien:**
+1. Der USER kann einen anderen User als Co-Host einladen
+2. Der eingeladene User ist sofort Co-Host (keine Annahme nötig)
+3. Das SYSTEM benachrichtigt den neuen Co-Host per Push
+4. Co-Hosts haben volle Bearbeitungsrechte (bearbeiten, absagen, löschen, Co-Hosts verwalten)
+5. Es gibt keine Hierarchie zwischen Ersteller und Co-Hosts
+
+**Nachbedingungen:**
+1. Der neue Co-Host erscheint in der Host-Liste des Events
+
+**Out of Scope:**
+1. Co-Host muss Einladung annehmen
+
+---
+
+#### US-3.9: Co-Host entfernen / verlassen
+**Als** Event-Host
+**möchte ich** meine Co-Host-Rolle aufgeben oder andere Co-Hosts entfernen können
+**damit** die Host-Liste aktuell bleibt.
+
+**Vorbedingungen:**
+1. Der USER ist Host des Events
+
+**Akzeptanzkriterien:**
+1. Der USER kann sich selbst als Co-Host entfernen (jederzeit)
+2. Der USER kann andere Co-Hosts entfernen
+3. Das SYSTEM verhindert NICHT dass der letzte Host das Event verlässt
+
+**Nachbedingungen:**
+1. Falls der letzte Host das Event verlässt:
+   - Das Event wird gelöscht
+   - Alle Teilnehmer werden per Push benachrichtigt
+   - Bei wiederkehrenden Events: Alle zukünftigen Instanzen werden gelöscht, vergangene bleiben bis 180-Tage-Löschung
+2. Der entfernte Co-Host wird per Push benachrichtigt
+
+---
+
+#### US-3.10: Einzelne Instanz absagen (Wiederkehrend)
+**Als** Event-Host
+**möchte ich** eine einzelne Instanz eines wiederkehrenden Events absagen
+**damit** ich Ausnahmen kommunizieren kann ohne die ganze Serie zu löschen.
+
+**Vorbedingungen:**
+1. Der USER ist Host des wiederkehrenden Events
+2. Die Instanz ist nicht bereits abgesagt
+
+**Akzeptanzkriterien:**
+1. Der USER kann bei einer einzelnen Instanz "Dieses Event absagen" wählen
+2. Das SYSTEM markiert nur diese Instanz als "Abgesagt"
+3. Das SYSTEM benachrichtigt alle Teilnehmer dieser Instanz per Push
+4. Alle anderen Instanzen der Serie bleiben unverändert
+
+**Nachbedingungen:**
+1. Die abgesagte Instanz zeigt "Abgesagt"-Banner
+2. Die Serie läuft normal weiter
+
+**Out of Scope:**
+1. Bearbeitung einzelner Instanzen (nur Absage möglich)
+
+---
+
+---
+
+### Non-Functional Requirements für Epic 3
+
+| ID | Kategorie | Anforderung | Ziel | Priorität |
+|----|-----------|-------------|------|-----------|
+| NFR-3.1 | Data Retention | Vergangene Events automatisch löschen | Nach 180 Tagen | High |
+| NFR-3.2 | Data Retention | Abgesagte Events automatisch löschen | Nach 180 Tagen | High |
+| NFR-3.3 | Validation | Event-Datum nur in der Zukunft | Keine vergangenen Daten | High |
+| NFR-3.4 | Validation | End-Zeit nach Start-Zeit | Logische Konsistenz | High |
+| NFR-3.5 | Usability | Bild-Placeholder bei fehlendem Bild | Konsistente UI | Medium |
+| NFR-3.6 | Performance | Event-Detail lädt schnell | < 1s | Medium |
+| NFR-3.7 | Limits | Keine Begrenzung für Kreise pro Event | Flexibilität | Low |
+
+---
+
+### Constraints & Randbedingungen
+
+1. **Co-Host Gleichberechtigung:** Ersteller und Co-Hosts haben identische Rechte. Es gibt keinen "Super-Admin".
+2. **Wiederkehrende Events vereinfacht:** Nur wöchentlich/monatlich, keine Einzel-Bearbeitung (nur Absage).
+3. **Kein Kopieren im MVP:** Event-Duplikation wird in späterem Release ergänzt.
+4. **Ort nur Freitext:** Keine Karten-Integration im MVP.
 
 ---
 
@@ -592,6 +792,22 @@
 1. Anzeige: "Teilnehmer aus: Kreis A, Kreis B"
 2. Zeigt nur Kreise in denen ich auch bin
 3. Hilft bei Events die in Kreisen geteilt wurden, in denen ich nicht bin
+
+#### US-4.6: Meine Events anzeigen
+**Als** User
+**möchte ich** alle meine eigenen Events sehen
+**damit** ich einen Überblick über meine erstellten und co-gehosteten Events habe.
+
+**Akzeptanzkriterien:**
+1. Das SYSTEM zeigt einen Bereich "Meine Events"
+2. Der USER sieht alle Events bei denen er Host ist (Ersteller oder Co-Host)
+3. Sortierung: Chronologisch nach Event-Datum (nächste zuerst)
+4. Das SYSTEM zeigt bei Events ohne Kreis-Zuordnung einen Hinweis "Nicht geteilt"
+5. Der USER kann nicht-geteilte Events bearbeiten und Kreise zuweisen
+6. Vergangene eigene Events werden separat angezeigt (oder ausblendbar)
+
+**Out of Scope:**
+1. Separater "Entwürfe"-Bereich (nicht-geteilte Events erscheinen hier mit Hinweis)
 
 ---
 
@@ -805,12 +1021,23 @@
 | Moderation | Nicht im MVP – Vertrauen in Community |
 | Max Teilnehmer | Optional mit Warteliste-Funktion |
 | User-Löschung | Events löschen, Kommentare anonymisieren |
+| **Event Co-Hosts** | Möglich, keine Hierarchie (alle gleichberechtigt) |
+| **Event-Löschung** | Möglich (nicht nur Absage), immer mit Benachrichtigung |
+| **Nicht-geteilte Events** | Erscheinen in "Meine Events" (Epic 4) mit Hinweis, kein separater Bereich |
+| **Event Data Retention** | 180 Tage nach Event-Datum automatisch löschen |
+| **Event-Zeit** | Start UND End-Zeit Pflicht (keine ganztägigen Events) |
+| **Event-Ort** | Nur Freitext (keine Karten-Integration im MVP) |
+| **Wiederkehrende Events** | Vereinfacht: nur wöchentlich/monatlich, nur Absage einzelner Instanzen |
+| **Event kopieren** | Nicht im MVP |
+| **Max Kreise pro Event** | Kein Limit |
 
 ## Offene Fragen (noch zu klären)
 
 1. ~~**Kreis-Löschung:** Was passiert mit Events wenn ein Kreis gelöscht wird?~~ → Geklärt: Events bleiben beim User, verlieren nur Kreis-Zuordnung (siehe US-2.10)
 2. ~~**Max Kreise:** Gibt es ein Limit wie vielen Kreisen ein User beitreten kann?~~ → Geklärt: Max 5 erstellen, max 20 beitreten (siehe NFR-2.1, NFR-2.2)
 3. ~~**Private Events:** Soll es Events geben die nur für bestimmte Mitglieder eines Kreises sichtbar sind?~~ → Geklärt: Nein. "Open Events" = alle Events sind für alle Mitglieder der geteilten Kreise sichtbar
+
+*Alle offenen Fragen zu Epic 3 wurden geklärt (siehe Constraints & Randbedingungen in Epic 3).*
 
 ---
 
@@ -819,13 +1046,22 @@
 ### MVP (v1.0)
 - Epic 1: User Management (vollständig)
 - Epic 2: Kreise (vollständig)
-- Epic 3: Events (US-3.1, US-3.2, US-3.4, US-3.5, US-3.6 – ohne wiederkehrende Events)
-- Epic 4: Discovery (US-4.1, US-4.2, US-4.4)
+- Epic 3: Events (vollständig inkl. Co-Hosts, Wiederkehrende Events)
+  - US-3.1: Event erstellen
+  - US-3.2: Event in mehreren Kreisen teilen
+  - US-3.3: Wiederkehrendes Event erstellen (vereinfacht)
+  - US-3.4: Event bearbeiten
+  - US-3.5: Event absagen
+  - US-3.6: Event löschen
+  - US-3.7: Event-Detail ansehen
+  - US-3.8: Co-Host hinzufügen
+  - US-3.9: Co-Host entfernen/verlassen
+  - US-3.10: Einzelne Instanz absagen
+- Epic 4: Discovery (US-4.1, US-4.2, US-4.4, US-4.6)
 - Epic 6: Teilnahme (US-6.1, US-6.2 – ohne Kommentare)
 - Epic 8: PWA (US-8.1)
 
 ### v1.1
-- Epic 3: Wiederkehrende Events (US-3.3)
 - Epic 5: Following (vollständig)
 - Epic 6: Kommentare (US-6.3, US-6.4)
 - Epic 7: Notifications (vollständig)
@@ -834,6 +1070,7 @@
 - Epic 4: Suche (US-4.3), Kreis-Indikator (US-4.5)
 - Epic 8: Offline & Push (US-8.2, US-8.3)
 - Karten-Integration (optional)
+- Event kopieren (aus vergangenen Events)
 
 ---
 
