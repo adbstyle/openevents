@@ -19,7 +19,7 @@
 | Teilnehmer-Sichtbarkeit | Alle Teilnehmer sichtbar (kreis-übergreifend) |
 | Gemeinsame Kreise | Sichtbar auf User-Profil |
 | Following | Nur innerhalb eigener Kreise möglich |
-| Discovery | Push-Notifications + personalisierter Feed |
+| Discovery | Chronologischer Feed mit sozialen Indikatoren (kein Algorithmus im MVP) |
 | Event-Scope | Nur kreis-basiert (keine öffentlichen Events, keine privaten Events innerhalb eines Kreises) |
 | Event-Typen | Einmalig und wiederkehrend |
 | Karte | Optional (nice-to-have) |
@@ -738,76 +738,218 @@
 
 ## Epic 4: Discovery & Feed
 
-**Ziel:** User entdecken relevante Events durch einen personalisierten Feed.
+**Ziel:** User entdecken relevante Events durch einen chronologischen Feed mit sozialen Indikatoren.
 
 ### User Stories
 
 #### US-4.1: Event-Feed anzeigen
 **Als** User
-**möchte ich** einen Feed mit relevanten Events sehen
+**möchte ich** einen Feed mit Events aus meinen Kreisen sehen
 **damit** ich nichts verpasse.
 
-**Akzeptanzkriterien:**
-1. Feed zeigt alle Events aus meinen Kreisen
-2. Sortierung: Chronologisch nach Event-Datum (nächste zuerst)
-3. Events der Vergangenheit werden ausgeblendet
-4. Infinite Scroll / Pagination
+**Vorbedingungen:**
+1. Der USER ist eingeloggt
+2. Der USER ist Mitglied in mindestens einem Kreis
 
-#### US-4.2: Events nach Kreis filtern
+**Akzeptanzkriterien:**
+1. Das SYSTEM zeigt alle zukünftigen Events aus den Kreisen des USERs
+2. Das SYSTEM zeigt Events bis 24h nach Event-ENDE (danach ausgeblendet)
+3. Sortierung: Chronologisch nach Event-Datum (nächste zuerst)
+4. Bei mehreren Events am gleichen Tag: Sortierung nach Startzeit
+5. Das SYSTEM gruppiert Events mit Sticky Headers: "Heute", "Morgen", "Diese Woche", "Später"
+6. Infinite Scroll / Pagination für lange Listen
+7. Pull-to-Refresh aktualisiert den Feed
+8. Abgesagte Events werden aus dem Feed ausgeblendet
+
+**Nachbedingungen:**
+1. Events nach Event-Ende erlauben keine Interaktion mehr (nur Ansicht)
+
+**Out of Scope:**
+1. Algorithmische Empfehlungen / Personalisierung
+2. Auto-Refresh / Realtime-Updates
+
+---
+
+#### US-4.2: Event-Card Darstellung
+**Als** User
+**möchte ich** auf einen Blick alle wichtigen Event-Infos sehen
+**damit** ich schnell entscheiden kann ob mich ein Event interessiert.
+
+**Akzeptanzkriterien:**
+1. Event-Card zeigt: Event-Bild (oder Placeholder)
+2. Event-Card zeigt: Titel
+3. Event-Card zeigt: Datum und Uhrzeit
+4. Event-Card zeigt: Ort
+5. Event-Card zeigt: Beschreibungs-Preview (max 2 Zeilen, ca. 80-100 Zeichen, dann "...mehr")
+6. Event-Card zeigt: Bekannte-Indikator (siehe US-4.5)
+7. Event-Card zeigt: Kreis-Indikator (siehe US-4.6)
+8. Tap auf Card öffnet Event-Detail
+
+---
+
+#### US-4.3: Events nach Kreis filtern
 **Als** User
 **möchte ich** Events nach Kreis filtern
-**damit** ich gezielt suchen kann.
+**damit** ich gezielt Events einer Gruppe sehen kann.
 
 **Akzeptanzkriterien:**
-1. Filter-Dropdown mit allen meinen Kreisen
-2. Multi-Select möglich
-3. Filter-Status bleibt während Session erhalten
+1. Filter-Dropdown mit allen Kreisen des USERs
+2. Multi-Select möglich (mehrere Kreise gleichzeitig)
+3. Filter-Status bleibt während der Session erhalten
+4. Bei App-Neustart wird Filter zurückgesetzt
 
-#### US-4.3: Events durchsuchen
+**Out of Scope:**
+1. Dauerhafte Filter-Speicherung
+2. Default-Kreis in Einstellungen
+
+---
+
+#### US-4.4: Events durchsuchen
 **Als** User
 **möchte ich** Events per Textsuche finden
 **damit** ich gezielt nach Themen suchen kann.
 
 **Akzeptanzkriterien:**
-1. Suche durchsucht Titel und Beschreibung
-2. Suche ist auf meine Kreise beschränkt
-3. Ergebnisse zeigen Event-Cards
+1. Suchfeld im Feed-Bereich
+2. Suche durchsucht Titel UND Beschreibung
+3. Suche ist auf Events aus USERs Kreisen beschränkt
+4. Suche findet zukünftige Events UND Events im 24h-Fenster nach Ende
+5. Ergebnisse werden als Event-Cards angezeigt
+6. Suche ist case-insensitive
 
-#### US-4.4: "Bekannte nehmen teil" Indikator
+**Out of Scope:**
+1. Suche nach Host-Namen
+2. Suche nach Ort
+3. Erweiterte Filter (Datum-Range, etc.)
+
+---
+
+#### US-4.5: "Bekannte nehmen teil" Indikator
 **Als** User
 **möchte ich** sehen welche mir bekannten Personen an einem Event teilnehmen
 **damit** ich ermutigt werde auch hinzugehen.
 
 **Akzeptanzkriterien:**
-1. Event-Card zeigt "X Personen denen du folgst nehmen teil"
-2. Profilbilder der gefolgten Personen werden angezeigt (max 3)
-3. Bei Tap auf Indikator: Liste aller mir bekannten Teilnehmer
+1. Event-Card zeigt Profilbilder von Bekannten (max 5 Avatare)
+2. Reihenfolge: Personen denen ich folge zuerst, dann andere Kreis-Mitglieder
+3. Bei mehr als 5 Bekannten: "+X" Indikator
+4. Anzeige differenziert: "X Following + Y aus deinen Kreisen nehmen teil"
+5. Tap auf Indikator öffnet vollständige Liste der bekannten Teilnehmer
 
-#### US-4.5: "Aus deinen Kreisen" Indikator
+**Out of Scope:**
+1. Visuelle Badges zur Unterscheidung Following vs. Kreis-Mitglied
+
+---
+
+#### US-4.6: "In deinen Kreisen" Indikator
 **Als** User
-**möchte ich** sehen aus welchen meiner Kreise Teilnehmer kommen
+**möchte ich** sehen in welchen meiner Kreise ein Event geteilt ist
 **damit** ich den sozialen Kontext verstehe.
 
 **Akzeptanzkriterien:**
-1. Anzeige: "Teilnehmer aus: Kreis A, Kreis B"
-2. Zeigt nur Kreise in denen ich auch bin
-3. Hilft bei Events die in Kreisen geteilt wurden, in denen ich nicht bin
+1. Event-Card zeigt: "In: Kreis A, Kreis B"
+2. Das SYSTEM zeigt nur Kreise in denen das Event geteilt ist UND der USER Mitglied ist
+3. Bei Events aus Kreisen wo USER nicht Mitglied ist: Kreis wird nicht angezeigt
 
-#### US-4.6: Meine Events anzeigen
+---
+
+#### US-4.7: Neue Events Badge
 **Als** User
-**möchte ich** alle meine eigenen Events sehen
-**damit** ich einen Überblick über meine erstellten und co-gehosteten Events habe.
+**möchte ich** sehen wenn neue Events in meinem Feed sind
+**damit** ich nichts verpasse.
 
 **Akzeptanzkriterien:**
-1. Das SYSTEM zeigt einen Bereich "Meine Events"
-2. Der USER sieht alle Events bei denen er Host ist (Ersteller oder Co-Host)
-3. Sortierung: Chronologisch nach Event-Datum (nächste zuerst)
-4. Das SYSTEM zeigt bei Events ohne Kreis-Zuordnung einen Hinweis "Nicht geteilt"
-5. Der USER kann nicht-geteilte Events bearbeiten und Kreise zuweisen
-6. Vergangene eigene Events werden separat angezeigt (oder ausblendbar)
+1. Feed-Tab zeigt Badge/Dot wenn neue Events vorhanden sind
+2. Ein Event gilt als "gesehen" sobald die Event-Card im sichtbaren Bereich (Viewport) war
+3. Badge verschwindet wenn alle neuen Events gesehen wurden
 
 **Out of Scope:**
-1. Separater "Entwürfe"-Bereich (nicht-geteilte Events erscheinen hier mit Hinweis)
+1. Toast/Banner "X neue Events"
+2. Zähler im Badge
+
+---
+
+#### US-4.8: Event verstecken
+**Als** User
+**möchte ich** einzelne Events aus meinem Feed ausblenden
+**damit** ich nur relevante Events sehe.
+
+**Akzeptanzkriterien:**
+1. Der USER kann bei einem Event "Nicht interessiert" wählen
+2. Das Event verschwindet dauerhaft aus dem Feed des USERs
+3. Das Event bleibt für andere User sichtbar
+4. Die Aktion kann nicht rückgängig gemacht werden
+
+**Out of Scope:**
+1. "Host stumm schalten" Funktion
+2. Versteckte Events wieder einblenden
+
+---
+
+#### US-4.9: Meine Events Tab
+**Als** User
+**möchte ich** alle Events sehen die mich betreffen
+**damit** ich einen Überblick über meine Aktivitäten habe.
+
+**Vorbedingungen:**
+1. Der USER ist eingeloggt
+
+**Akzeptanzkriterien:**
+1. Separater Tab "Meine Events" in der Hauptnavigation
+2. Der USER sieht alle Events wo er Host ist (Ersteller oder Co-Host)
+3. Der USER sieht alle Events wo er "Zusage" hat
+4. Sortierung: Chronologisch nach Event-Datum (nächste zuerst)
+5. Nicht-geteilte Events erscheinen in eigener Sektion "Entwürfe"
+6. Nicht-geteilte Events zeigen CTA "Jetzt teilen"
+7. Vergangene eigene Events werden separat angezeigt (oder ausblendbar)
+
+**Out of Scope:**
+1. Events mit Status "Vielleicht" oder "Interessiert" anzeigen
+
+---
+
+#### US-4.10: Leerer Feed (Empty State)
+**Als** neuer User
+**möchte ich** verstehen was ich tun muss um Events zu sehen
+**damit** ich die App nutzen kann.
+
+**Akzeptanzkriterien:**
+1. WENN User in keinem Kreis ist: Anzeige "Tritt einem Kreis bei oder erstelle einen" mit CTAs
+2. WENN User in Kreis(en) ist aber Feed leer: Anzeige "Noch keine Events – teile das erste Event!" mit CTA
+3. CTAs führen direkt zur entsprechenden Aktion (Kreis beitreten/erstellen bzw. Event erstellen)
+
+---
+
+#### US-4.11: Events bei Kreis-Beitritt
+**Als** User der einem Kreis beitritt
+**möchte ich** sofort relevante Events sehen
+**damit** ich nichts verpasse.
+
+**Akzeptanzkriterien:**
+1. Nach Kreis-Beitritt sieht der USER alle zukünftigen Events dieses Kreises
+2. Der USER sieht auch kürzlich vergangene Events (24h-Fenster nach Ende)
+3. Events erscheinen sofort im Feed
+
+---
+
+### Non-Functional Requirements für Epic 4
+
+| ID | Kategorie | Anforderung | Ziel | Priorität |
+|----|-----------|-------------|------|-----------|
+| NFR-4.1 | Performance | Feed initial load | < 2s | High |
+| NFR-4.2 | Performance | Scroll-Performance | 60fps, kein Jank | High |
+| NFR-4.3 | Performance | Suche Antwortzeit | < 500ms | Medium |
+| NFR-4.4 | Usability | Event-Card scannbar | Wichtigste Info in < 2s erfassbar | High |
+| NFR-4.5 | Usability | Sticky Headers sichtbar | Headers bleiben beim Scrollen oben | Medium |
+
+---
+
+### Constraints & Randbedingungen für Epic 4
+
+1. **Keine algorithmischen Empfehlungen im MVP:** Feed ist rein chronologisch, keine Personalisierung.
+2. **24h-Regel:** Events bleiben 24h nach Event-Ende sichtbar, aber ohne Interaktionsmöglichkeit.
+3. **Verstecken ist permanent:** "Nicht interessiert" kann nicht rückgängig gemacht werden.
+4. **Bekannte = Following + Kreis:** Beide Gruppen zählen als "Bekannte", Following wird priorisiert.
 
 ---
 
@@ -1023,13 +1165,20 @@
 | User-Löschung | Events löschen, Kommentare anonymisieren |
 | **Event Co-Hosts** | Möglich, keine Hierarchie (alle gleichberechtigt) |
 | **Event-Löschung** | Möglich (nicht nur Absage), immer mit Benachrichtigung |
-| **Nicht-geteilte Events** | Erscheinen in "Meine Events" (Epic 4) mit Hinweis, kein separater Bereich |
+| **Nicht-geteilte Events** | Erscheinen in "Meine Events" Tab in eigener Sektion "Entwürfe" |
 | **Event Data Retention** | 180 Tage nach Event-Datum automatisch löschen |
 | **Event-Zeit** | Start UND End-Zeit Pflicht (keine ganztägigen Events) |
 | **Event-Ort** | Nur Freitext (keine Karten-Integration im MVP) |
 | **Wiederkehrende Events** | Vereinfacht: nur wöchentlich/monatlich, nur Absage einzelner Instanzen |
 | **Event kopieren** | Nicht im MVP |
 | **Max Kreise pro Event** | Kein Limit |
+| **Feed-Sortierung** | Chronologisch nach Event-Datum, keine algorithmischen Empfehlungen |
+| **Vergangene Events** | 24h nach Event-ENDE sichtbar (read-only), danach ausgeblendet |
+| **Bekannte-Definition** | Following (primär) + Kreis-Mitglieder (sekundär) |
+| **Event verstecken** | "Nicht interessiert" möglich, permanent, nicht rückgängig machbar |
+| **Feed-Gruppierung** | Sticky Headers: Heute, Morgen, Diese Woche, Später |
+| **Meine Events Tab** | Zeigt Host-Events + Events mit Zusage |
+| **Abgesagte Events** | Aus Feed ausgeblendet |
 
 ## Offene Fragen (noch zu klären)
 
@@ -1038,6 +1187,7 @@
 3. ~~**Private Events:** Soll es Events geben die nur für bestimmte Mitglieder eines Kreises sichtbar sind?~~ → Geklärt: Nein. "Open Events" = alle Events sind für alle Mitglieder der geteilten Kreise sichtbar
 
 *Alle offenen Fragen zu Epic 3 wurden geklärt (siehe Constraints & Randbedingungen in Epic 3).*
+*Alle offenen Fragen zu Epic 4 wurden geklärt (siehe Constraints & Randbedingungen in Epic 4).*
 
 ---
 
@@ -1057,7 +1207,18 @@
   - US-3.8: Co-Host hinzufügen
   - US-3.9: Co-Host entfernen/verlassen
   - US-3.10: Einzelne Instanz absagen
-- Epic 4: Discovery (US-4.1, US-4.2, US-4.4, US-4.6)
+- Epic 4: Discovery & Feed (vollständig)
+  - US-4.1: Event-Feed anzeigen
+  - US-4.2: Event-Card Darstellung
+  - US-4.3: Events nach Kreis filtern
+  - US-4.4: Events durchsuchen
+  - US-4.5: "Bekannte nehmen teil" Indikator
+  - US-4.6: "In deinen Kreisen" Indikator
+  - US-4.7: Neue Events Badge
+  - US-4.8: Event verstecken
+  - US-4.9: Meine Events Tab
+  - US-4.10: Leerer Feed (Empty State)
+  - US-4.11: Events bei Kreis-Beitritt
 - Epic 6: Teilnahme (US-6.1, US-6.2 – ohne Kommentare)
 - Epic 8: PWA (US-8.1)
 
@@ -1067,7 +1228,6 @@
 - Epic 7: Notifications (vollständig)
 
 ### v1.2
-- Epic 4: Suche (US-4.3), Kreis-Indikator (US-4.5)
 - Epic 8: Offline & Push (US-8.2, US-8.3)
 - Karten-Integration (optional)
 - Event kopieren (aus vergangenen Events)
